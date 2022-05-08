@@ -2,85 +2,68 @@
   margin: 0px;
   box-sizing: border-box;
 }
-
 .App {
-  margin-top: 10%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   gap: 10px;
 }
-
 h1 {
-  font-size: 20px;
+  font-weight: 500;
+  font-size: 16px;
+  color: gray;
 }
-
+.board {
+  padding: 8px;
+  background-color: rgb(146, 187, 187);
+}
+.row {
+  display: flex;
+}
+.box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50px;
+  width: 50px;
+}
+.circle {
+  height: 45px;
+  width: 45px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.box.highlight > .circle {
+  border-color: rgb(253, 251, 114);
+  opacity: 0.6;
+}
+.enabled > .circle {
+  background-color: rgb(187, 253, 231);
+}
 button {
-  background: none;
-  border: none;
-  font: inherit;
-  outline: none;
   cursor: pointer;
-  border: 1px solid gray;
-  padding: 2px 12px 4px 12px;
-  transition: opacity 0.3s;
-}
-button:hover {
-  background-color: whitesmoke;
+  color: gray;
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: 1px solid;
+  border-color: gray;
+  transition: opacity 0.4s;
 }
 button.show {
   opacity: 1;
 }
 button.hide {
   opacity: 0;
+}
+button.hide,
+.box.disabled > button {
   cursor: auto;
 }
-button:disabled {
-  cursor: auto;
+.red_slot {
+  background-color: rgb(254, 72, 72);
 }
-
-.enabled {
-  cursor: pointer;
-}
-.enabled:hover {
-  background-color: whitesmoke;
-}
-.enabled.finished {
-  cursor: auto;
-  background-color: transparent;
-}
-
-.row {
-  display: flex;
-}
-
-.box {
-  border: 1px solid gray;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
-  height: 50px;
-  width: 50px;
-  color: gray;
-  font-size: 20px;
-}
-.box.disabled {
-  background-color: azure;
-}
-.box.highlight {
-  background-color: rgb(255, 246, 197);
-}
-.box.loc-x-0 {
-  border-top: none;
-}
-.box.loc-x-2 {
-  border-bottom: none;
-}
-.box.loc-y-0 {
-  border-left: none;
-}
-.box.loc-y-2 {
-  border-right: none;
+.black_slot {
+  background-color: rgb(46, 46, 46);
 }

@@ -1,15 +1,17 @@
 import { VanillaState } from "./module"
 import "./App.css"
 
-const initBoard = [
-  [null, null, null],
-  [null, null, null],
-  [null, null, null]
+export const initBoard = [
+  [null, null, null, null, null, null, null],
+  [null, null, null, null, null, null, null],
+  [null, null, null, null, null, null, null],
+  [null, null, null, null, null, null, null],
+  [null, null, null, null, null, null, null],
+  [null, null, null, null, null, null, null]
 ] as (Mark | null)[][]
 
-type Mark = "X" | "O"
+type Mark = "RED" | "BLACK"
 type Board = typeof initBoard
-
 type WinState =
   | {
       mark: Mark
@@ -22,138 +24,217 @@ type WinState =
   | null
 
 export class GameState extends VanillaState {
+  private started = false
   private board: Board = this.cloneBoard(initBoard)
-
   private cloneBoard(b: Board) {
     return b.map((r) => [...r])
-  }
-  private winMark(): Mark {
-    return this.turn() === "O" ? "X" : "O"
-  }
-  private findWinRow() {
-    const b = this.board
-    for (let i = 0; i < 3; i++) {
-      const row = b[i]
-      if (this.hasWinLine(row)) {
-        return {
-          mark: this.winMark(),
-          line: [
-            [i, 0],
-            [i, 1],
-            [i, 2]
-          ]
-        }
-      }
-    }
-  }
-  private findWinColumn() {
-    const b = this.board
-    for (let i = 0; i < 3; i++) {
-      const column = i
-      if (this.hasWinLine([b[0][column], b[1][column], b[2][column]])) {
-        return {
-          mark: this.winMark(),
-          line: [
-            [0, column],
-            [1, column],
-            [2, column]
-          ]
-        }
-      }
-    }
-  }
-  private findWinForwardSlash() {
-    const b = this.board
-    if (this.hasWinLine([b[0][0], b[1][1], b[2][2]])) {
-      return {
-        mark: this.winMark(),
-        line: [
-          [0, 0],
-          [1, 1],
-          [2, 2]
-        ]
-      }
-    }
-  }
-  private findWinBackSlash() {
-    const b = this.board
-    if (this.hasWinLine([b[0][2], b[1][1], b[2][0]])) {
-      return {
-        mark: this.winMark(),
-        line: [
-          [0, 2],
-          [1, 1],
-          [2, 0]
-        ]
-      }
-    }
   }
   private hasMarkedAll() {
     return (
       this.board.filter((r) => {
         return r.every(Boolean)
-      }).length === 3
+      }).length === 6
     )
   }
-  private hasWinLine(line: Board[number]) {
-    return (
-      line.every((mark) => mark === "X") || line.every((mark) => mark === "O")
-    )
+  private winner(): Mark {
+    return this.currTurn === "RED" ? "BLACK" : "RED"
   }
-  turn(): Mark {
-    let xCount = 0
-    let oCount = 0
-    this.board.forEach((r) => {
-      r.forEach((el) => {
-        if (el === "O") oCount++
-        if (el === "X") xCount++
-      })
-    })
-    return xCount > oCount ? "O" : "X"
-  }
-  winState(): WinState {
-    const rowWin = this.findWinRow()
-    if (rowWin) {
-      return rowWin
-    }
-    const columnWin = this.findWinColumn()
-    if (columnWin) {
-      return columnWin
-    }
-    const fSlashWin = this.findWinForwardSlash()
-    if (fSlashWin) {
-      return fSlashWin
-    }
-    const bSlashWin = this.findWinBackSlash()
-    if (bSlashWin) {
-      return bSlashWin
-    }
-    if (this.hasMarkedAll())
-      return {
-        mark: "DRAW",
-        line: null
+  private checkRows() {
+    const rows = this.board
+    for (let i = 0; i < rows.length; i++) {
+      const thisRow = rows[i]
+      let marks = [thisRow[0]]
+      for (let j = 1; j < thisRow.length; j++) {
+        const prevMark = marks[marks.length - 1]
+        const currMark = thisRow[j]
+        if (prevMark && prevMark === currMark) {
+          marks.push(currMark)
+          if (marks.length === 4) {
+            return {
+              mark: this.winner(),
+              line: [
+                [i, j - 3],
+                [i, j - 2],
+                [i, j - 1],
+                [i, j]
+              ]
+            }
+          }
+        } else {
+          marks = [currMark]
+        }
       }
+    }
     return null
   }
-  boardState() {
-    return this.board
+  private checkColumns() {
+    const columns = this.columns
+    for (let i = 0; i < columns.length; i++) {
+      const thisColumn = columns[i]
+      let marks = [thisColumn[0]]
+      for (let j = 1; j < thisColumn.length; j++) {
+        const prevMark = marks[marks.length - 1]
+        const currMark = thisColumn[j]
+        if (prevMark && prevMark === currMark) {
+          marks.push(currMark)
+          if (marks.length === 4) {
+            return {
+              mark: this.winner(),
+              line: [
+                [j - 3, i],
+                [j - 2, i],
+                [j - 1, i],
+                [j, i]
+              ]
+            }
+          }
+        } else {
+          marks = [currMark]
+        }
+      }
+    }
+    return null
   }
-  playCount() {
-    let playCount = 0
-    this.boardState().forEach((row) => {
-      row.forEach((box) => {
-        if (box) playCount++
+  private checkBackSlashes() {
+    const b = this.board
+    const starts = [
+      [2, 0],
+      [1, 0],
+      [0, 0],
+      [0, 1],
+      [0, 2],
+      [0, 3]
+    ]
+    for (const st of starts) {
+      let y = st[0]
+      let x = st[1]
+      let currMark = b[y][x]
+      let marks: (Mark | null)[] = []
+      while (true) {
+        const prevMark = marks[marks.length - 1]
+        if (currMark && currMark === prevMark) {
+          marks.push(currMark)
+          if (marks.length === 4) {
+            return {
+              mark: this.winner(),
+              line: [
+                [y - 3, x - 3],
+                [y - 2, x - 2],
+                [y - 1, x - 1],
+                [y, x]
+              ]
+            }
+          }
+        } else {
+          marks = [currMark]
+        }
+        x += 1
+        y += 1
+        if (x <= 6 && y <= 5) {
+          currMark = b[y][x]
+        } else {
+          break
+        }
+      }
+    }
+    return null
+  }
+  private checkForwardSlashes() {
+    const b = this.board
+    const starts = [
+      [0, 3],
+      [0, 4],
+      [0, 5],
+      [0, 6],
+      [1, 6],
+      [2, 6]
+    ]
+    for (const st of starts) {
+      let y = st[0]
+      let x = st[1]
+      let currMark = b[y][x]
+      let marks: (Mark | null)[] = []
+      while (true) {
+        const prevMark = marks[marks.length - 1]
+        if (currMark && currMark === prevMark) {
+          marks.push(currMark)
+          if (marks.length === 4) {
+            return {
+              mark: this.winner(),
+              line: [
+                [y - 3, x + 3],
+                [y - 2, x + 2],
+                [y - 1, x + 1],
+                [y, x]
+              ]
+            }
+          }
+        } else {
+          marks = [currMark]
+        }
+        x -= 1
+        y += 1
+        if (x >= 0 && y <= 5) {
+          currMark = b[y][x]
+        } else {
+          break
+        }
+      }
+    }
+    return null
+  }
+  get columns() {
+    const width = 7
+    const height = 6
+    const columns = []
+    const b = this.board
+    for (let i = 0; i < width; i++) {
+      const thisCol = []
+      for (let j = 0; j < height; j++) {
+        thisCol.push(b[j][i])
+      }
+      columns.push(thisCol)
+    }
+    return columns
+  }
+  get currTurn(): Mark {
+    let bCount = 0
+    let rCount = 0
+    this.board.forEach((r) => {
+      r.forEach((el) => {
+        if (el === "RED") rCount++
+        if (el === "BLACK") bCount++
       })
     })
-    return playCount
+    return bCount > rCount ? "RED" : "BLACK"
   }
-  play(loc: { y: number; x: number }) {
+  get boardState() {
+    return this.board
+  }
+  get hasStarted() {
+    return this.started
+  }
+  get winState(): WinState {
+    const rowWin = this.checkRows()
+    if (rowWin) return rowWin
+    const columnWin = this.checkColumns()
+    if (columnWin) return columnWin
+    const bSlashWin = this.checkBackSlashes()
+    if (bSlashWin) return bSlashWin
+    const fSlashWin = this.checkForwardSlashes()
+    if (fSlashWin) return fSlashWin
+    if (this.hasMarkedAll()) return { mark: "DRAW", line: null }
+    return null
+  }
+  play(col: number, row: number) {
+    this.started = true
     const nextBoard = this.cloneBoard(this.board)
-    nextBoard[loc.y][loc.x] = this.turn()
+    nextBoard[row][col] = this.currTurn
     this.board = nextBoard
     return this
   }
   restart() {
+    this.started = false
     this.board = this.cloneBoard(initBoard)
     return this
   }

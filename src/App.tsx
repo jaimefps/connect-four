@@ -1,73 +1,129 @@
-import { GameState } from "./GameState"
+import { GameState, initBoard } from "./GameState"
 import { useVanillaState } from "./module"
 import "./App.css"
 
-function shouldHighlight(x: number, y: number, game: GameState) {
+type HelperData = {
+  col: number
+  row: number
+  game: GameState
+  gameOver: boolean
+}
+
+function isActive({ col, row, game, gameOver }: HelperData) {
+  if (gameOver) return false
+  return game.columns[col].lastIndexOf(null) === row
+}
+
+function isHighlighted({ col, row, game }: HelperData) {
   return (
-    game.winState()?.line?.some(([thisY, thisX]) => {
-      return thisY === y && thisX === x
-    }) ?? false
+    game.winState?.line?.some(
+      ([thisRow, thisCol]) => thisRow === row && thisCol === col
+    ) ?? false
   )
 }
 
-function getClassNames(x: number, y: number, game: GameState) {
-  const lx = `loc-x-${x}`
-  const ly = `loc-y-${y}`
-  const end = !!game.winState() ? "finished" : ""
-  const active = game.boardState()[y][x] ? "disabled" : "enabled"
-  const highlight = shouldHighlight(x, y, game) ? "highlight" : ""
-  return `box ${active} ${highlight} ${end} ${lx} ${ly}`
+function getClassNames({ col, row, game, gameOver }: HelperData) {
+  const active =
+    !gameOver &&
+    isActive({
+      col,
+      row,
+      game,
+      gameOver
+    })
+      ? "enabled"
+      : "disabled"
+  const highlight = isHighlighted({
+    col,
+    row,
+    game,
+    gameOver
+  })
+    ? "highlight"
+    : ""
+  return `box ${active} ${highlight}`
 }
 
-function makeBoxProps(x: number, y: number, game: GameState) {
-  const content = game.boardState()[y][x]
+function makeBoxProps({ row, col, game, gameOver }: HelperData) {
+  const type = (game.boardState[row][col] ?? "empty") + "_slot"
   return {
-    children: content,
-    className: getClassNames(x, y, game),
-    onClick: () => game.play({ x, y }).rerender(),
-    disabled: Boolean(content ?? game.winState())
+    className: getClassNames({
+      col,
+      row,
+      game,
+      gameOver
+    }),
+    children: (
+      <button
+        className={`circle ${type.toLowerCase()}`}
+        onClick={() => game.play(col, row).rerender()}
+        disabled={
+          gameOver ||
+          !isActive({
+            col,
+            row,
+            game,
+            gameOver
+          })
+        }
+      />
+    )
   }
 }
 
+const BoardRow: React.FC<{
+  row: any[]
+  rIdx: number
+  game: GameState
+  gameOver: boolean
+}> = ({ rIdx, row, game, gameOver }) => (
+  <div className="row">
+    {row.map((_, cIdx) => (
+      <div
+        key={`${rIdx}_${cIdx}`}
+        {...makeBoxProps({
+          row: rIdx,
+          col: cIdx,
+          game,
+          gameOver
+        })}
+      />
+    ))}
+  </div>
+)
+
 function App() {
   const game = useVanillaState(GameState)
-  const winDetails = game.winState()
-  const playCount = game.playCount()
+  const winDetails = game.winState
 
   return (
     <div className="App">
       {winDetails?.mark === "DRAW" ? (
-        <h1>Draw</h1>
+        <h1>DRAW</h1>
       ) : winDetails ? (
-        <h1>Winner: {winDetails.mark}</h1>
+        <h1>WINNER: {winDetails.mark}</h1>
       ) : (
-        <h1>Turn: {game.turn()}</h1>
+        <h1>TURN: {game.currTurn}</h1>
       )}
 
       <div className="board">
-        <div className="row">
-          <button {...makeBoxProps(0, 0, game)} />
-          <button {...makeBoxProps(0, 1, game)} />
-          <button {...makeBoxProps(0, 2, game)} />
-        </div>
-        <div className="row">
-          <button {...makeBoxProps(1, 0, game)} />
-          <button {...makeBoxProps(1, 1, game)} />
-          <button {...makeBoxProps(1, 2, game)} />
-        </div>
-        <div className="row">
-          <button {...makeBoxProps(2, 0, game)} />
-          <button {...makeBoxProps(2, 1, game)} />
-          <button {...makeBoxProps(2, 2, game)} />
-        </div>
+        {initBoard.map((row, rIdx) => (
+          <BoardRow
+            key={rIdx}
+            rIdx={rIdx}
+            row={row}
+            game={game}
+            gameOver={!!winDetails}
+          />
+        ))}
       </div>
 
       <button
-        disabled={!playCount}
+        disabled={!game.hasStarted}
         onClick={() => game.restart().rerender()}
-        className={`btn ${playCount ? "show" : "hide"}`}
+        className={game.hasStarted ? "show" : "hide"}
       >
-        restart
+        RESTART
       </button>
     </div>
   )
