@@ -7,6 +7,7 @@ type HelperData = {
   row: number
   game: GameState
   gameOver: boolean
+  draw?: boolean
 }
 
 function isActive({ col, row, game, gameOver }: HelperData) {
@@ -22,7 +23,7 @@ function isHighlighted({ col, row, game }: HelperData) {
   )
 }
 
-function getClassNames({ col, row, game, gameOver }: HelperData) {
+function getClassNames({ col, row, game, gameOver, draw }: HelperData) {
   const active =
     !gameOver &&
     isActive({
@@ -41,17 +42,18 @@ function getClassNames({ col, row, game, gameOver }: HelperData) {
   })
     ? "highlight"
     : ""
-  return `box ${active} ${highlight}`
+  return `box ${active} ${highlight} ${draw ? "draw" : ""}`
 }
 
-function makeBoxProps({ row, col, game, gameOver }: HelperData) {
+function makeBoxProps({ row, col, game, gameOver, draw }: HelperData) {
   const type = (game.boardState[row][col] ?? "empty") + "_slot"
   return {
     className: getClassNames({
       col,
       row,
       game,
-      gameOver
+      gameOver,
+      draw
     }),
     children: (
       <button
@@ -76,7 +78,8 @@ const BoardRow: React.FC<{
   rIdx: number
   game: GameState
   gameOver: boolean
-}> = ({ rIdx, row, game, gameOver }) => (
+  draw: boolean
+}> = ({ rIdx, row, game, gameOver, draw }) => (
   <div className="row">
     {row.map((_, cIdx) => (
       <div
@@ -85,7 +88,8 @@ const BoardRow: React.FC<{
           row: rIdx,
           col: cIdx,
           game,
-          gameOver
+          gameOver,
+          draw
         })}
       />
     ))}
@@ -114,6 +118,7 @@ function App() {
             row={row}
             game={game}
             gameOver={!!winDetails}
+            draw={winDetails?.mark === "DRAW"}
           />
         ))}
       </div>

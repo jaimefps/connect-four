@@ -11,9 +11,8 @@
   gap: 10px;
 }
 h1 {
-  font-weight: 500;
+  font-weight: bold;
   font-size: 16px;
-  color: gray;
 }
 .board {
   padding: 8px;
@@ -44,7 +43,7 @@ h1 {
 }
 button {
   cursor: pointer;
-  color: gray;
+  color: black;
   padding: 4px 12px;
   border-radius: 4px;
   border: 1px solid;
@@ -66,4 +65,7 @@ button.hide,
 }
 .black_slot {
   background-color: rgb(46, 46, 46);
+}
+.box.draw > .circle {
+  opacity: 0.2;
 }

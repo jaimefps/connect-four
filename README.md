@@ -4,4 +4,4 @@ Built a connect-four game which leverages a thought experiment around using regu
 
 ## Preview
 
-<img src="./assets/sample_.png" alt="drawing" width="175"/>
+<img src="./assets/sample.png" alt="drawing" width="400"/>
