@@ -1,4 +1,4 @@
-import { VanillaState } from "./module"
+import { rerender, VanillaState } from "use-vanilla-state"
 import "./App.css"
 
 export const initBoard = [
@@ -26,6 +26,23 @@ type WinState =
 export class GameState extends VanillaState {
   private started = false
   private board: Board = this.cloneBoard(initBoard)
+
+  @rerender
+  play(col: number, row: number) {
+    this.started = true
+    const nextBoard = this.cloneBoard(this.board)
+    nextBoard[row][col] = this.currTurn
+    this.board = nextBoard
+    return this
+  }
+
+  @rerender
+  restart() {
+    this.started = false
+    this.board = this.cloneBoard(initBoard)
+    return this
+  }
+
   private cloneBoard(b: Board) {
     return b.map((r) => [...r])
   }
@@ -225,17 +242,5 @@ export class GameState extends VanillaState {
     if (fSlashWin) return fSlashWin
     if (this.hasMarkedAll()) return { mark: "DRAW", line: null }
     return null
-  }
-  play(col: number, row: number) {
-    this.started = true
-    const nextBoard = this.cloneBoard(this.board)
-    nextBoard[row][col] = this.currTurn
-    this.board = nextBoard
-    return this
-  }
-  restart() {
-    this.started = false
-    this.board = this.cloneBoard(initBoard)
-    return this
   }
 }

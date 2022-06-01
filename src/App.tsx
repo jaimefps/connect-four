@@ -1,5 +1,5 @@
 import { GameState, initBoard } from "./GameState"
-import { useVanillaState } from "./module"
+import { useVanillaState } from "use-vanilla-state"
 import "./App.css"
 
 type HelperData = {
@@ -58,7 +58,7 @@ function makeBoxProps({ row, col, game, gameOver, draw }: HelperData) {
     children: (
       <button
         className={`circle ${type.toLowerCase()}`}
-        onClick={() => game.play(col, row).rerender()}
+        onClick={() => game.play(col, row)}
         disabled={
           gameOver ||
           !isActive({
@@ -125,7 +125,7 @@ function App() {
 
       <button
         disabled={!game.hasStarted}
-        onClick={() => game.restart().rerender()}
+        onClick={() => game.restart()}
         className={game.hasStarted ? "show" : "hide"}
       >
         RESTART
